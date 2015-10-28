@@ -40,7 +40,15 @@ void *tosse(void *pitems)
     y = randfrom(-1.0,1.0);
     distance_squared = x * x + y * y;
     pthread_mutex_lock( &mutex1 );
-    counter++;
+    if(counter<tosses)
+    {
+        counter++;
+    }
+    else
+    {
+        free(pi);
+        pthread_exit(NULL);
+    }
     printf("Job:#%d Done! Thread No.%ld!\n", counter,tid);
     printf("distance_squared: %f\n",distance_squared);
     if(distance_squared<=1)
@@ -74,32 +82,36 @@ int main( int argc, char *argv[] )
         char *e;
         tosses = strtol(argv[1],&e,0);
         pthread_t threads[NUM_THREADS];
-
         pitem.tosses = tosses;
-      	for(t=0; t<NUM_THREADS; t++)
-		{
-            ptr_pitem = (struct pitem *)malloc(sizeof(struct pitem));
-            pitem.thread = t;
-            ptr_pitem->thread = t;
-            ptr_pitem->tosses = tosses;
-      		rc = pthread_create(&threads[t], NULL, tosse, ptr_pitem);
-      		if (rc)
-			{
-         		printf("ERROR; return code from pthread_create() is %d\n", rc);
-         		exit(-1);
-      		}
-		}
-        for(t=0; t<NUM_THREADS; t++) 
+
+        while(counter<tosses)
         {
-            rc = pthread_join(threads[t], &status);
-            if (rc) 
+            for(t=0; (t<=NUM_THREADS)&&(counter<tosses); t++)
             {
-                printf("ERROR; return code from pthread_join() is %d\n", rc);
-                exit(-1);
+                ptr_pitem = (struct pitem *)malloc(sizeof(struct pitem));
+                pitem.thread = t;
+                ptr_pitem->thread = t;
+                ptr_pitem->tosses = tosses;
+                rc = pthread_create(&threads[t], NULL, tosse, ptr_pitem);
+                if (rc)
+                {
+                    printf("ERROR; return code from pthread_create() is %d\n", rc);
+                    exit(-1);
+                }
             }
-            printf("Main: completed join with thread %ld having a status of %ld\n",t,(long)status);
+            for(t=0; (t<=NUM_THREADS)&&(counter<tosses); t++)
+            {
+                rc = pthread_join(threads[t], &status);
+                if (rc)
+                {
+                    printf("ERROR; return code from pthread_join() is %d\n", rc);
+                    exit(-1);
+                }
+                printf("Main: completed join with thread %ld having a status of %ld\n",t,(long)status);
+            }
         }
-        pi_estimate = 4*number_incircle/tosses;
+
+        pi_estimate = 4*(((double)number_incircle)/((double)tosses));
         printf("number of tosses: %u\n",tosses);
         printf("number in circle: %u\n",number_incircle);
         printf("Pi Estimate: %f\n",pi_estimate);
