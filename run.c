@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <time.h>
+#include <sys/sysinfo.h>
 
-#define NUM_THREADS     8
 
 #define N 1000
 #define MEGEXTRA 1000000
+
+int NUM_THREADS =  4;
 
 clock_t begin, end;
 double time_spent;
@@ -67,6 +69,7 @@ void *tosse(void *pitems)
 int main( int argc, char *argv[] )  
 {
     begin = clock();
+    NUM_THREADS = get_nprocs();
     int prgstat=0;
 	long tosses = 0;
     struct pitem pitem; 
@@ -120,12 +123,13 @@ int main( int argc, char *argv[] )
             }
         }
         pi_estimate = 4*(((double)number_incircle)/((double)tosses));
-        printf("Number of tosses: %u\n",tosses);
-        printf("Number in circle: %u\n",number_incircle);
-        printf("Pi Estimate: %f\n",pi_estimate);
+        //printf("Number of tosses: %u\n",tosses);
+        //printf("Number in circle: %u\n",number_incircle);
+        //printf("Pi Estimate: %f\n",pi_estimate);
+        printf("%.15f\n",pi_estimate);
         end = clock();
         time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-        printf("Time Elapsed: %fs\n",time_spent);
+        //printf("Time Elapsed: %fs\n",time_spent);
         pthread_exit(NULL);
         prgstat=0;
    	}
