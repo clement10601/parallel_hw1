@@ -5,10 +5,18 @@
 #define N 1000
 #define MEGEXTRA 1000000
 
-pthread_attr_t attr;
+double randfrom(double min, double max) 
+{
+    double range = (max - min); 
+    double div = RAND_MAX / range;
+    return min + (rand() / div);
+}
 
 void *tosse(void *threadid)
 {
+   double x,y;
+   //x = randfrom(-1.0,1.0);
+   //x = randfrom(-1.0,1.0);
    long tid;
    tid = (long)threadid;
    printf("Hello World! It's me, thread #%ld!\n", tid);
