@@ -17,15 +17,13 @@ void *tosse(void *threadid)
 
 int main( int argc, char *argv[] )  
 {
-	long tossesAmount = 1;
+	long tossesAmount = 2;
     int rc = 0;
     long t = 0;
-    printf("%d",tossesAmount);
    	if( argc == 2 )
    	{
-        printf("%d",tossesAmount);
-      	tossesAmount = (long)argv[1];
-        printf("%d",tossesAmount);
+        char * e;
+        tossesAmount = strtol(argv[1],&e,0);
         pthread_t threads[tossesAmount];
 
       	for(t=0; t<tossesAmount; t++)
