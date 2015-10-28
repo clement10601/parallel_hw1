@@ -44,11 +44,6 @@ void *tosse(void *pitems)
     {
         counter++;
     }
-    else
-    {
-        free(pi);
-        pthread_exit(NULL);
-    }
     printf("Job:#%d Done! Thread No.%ld!\n", counter,tid);
     printf("distance_squared: %f\n",distance_squared);
     if(distance_squared<=1)
@@ -82,11 +77,15 @@ int main( int argc, char *argv[] )
         char *e;
         tosses = strtol(argv[1],&e,0);
         pthread_t threads[NUM_THREADS];
-        pitem.tosses = tosses;
+        int l =NUM_THREADS;
 
         while(counter<tosses)
         {
-            for(t=0; (t<=NUM_THREADS)&&(counter<tosses); t++)
+            if(tosses-NUM_THREADS<0)
+            {
+                l=tosses;
+            }
+            for(t=0; t<l; t++)
             {
                 ptr_pitem = (struct pitem *)malloc(sizeof(struct pitem));
                 pitem.thread = t;
@@ -99,7 +98,12 @@ int main( int argc, char *argv[] )
                     exit(-1);
                 }
             }
-            for(t=0; (t<=NUM_THREADS)&&(counter<tosses); t++)
+            l = (tosses-counter)% NUM_THREADS;
+            if(l==0)
+            {
+                l=NUM_THREADS;
+            }
+            for(t=0; t<l; t++)
             {
                 rc = pthread_join(threads[t], &status);
                 if (rc)
@@ -110,7 +114,6 @@ int main( int argc, char *argv[] )
                 printf("Main: completed join with thread %ld having a status of %ld\n",t,(long)status);
             }
         }
-
         pi_estimate = 4*(((double)number_incircle)/((double)tosses));
         printf("number of tosses: %u\n",tosses);
         printf("number in circle: %u\n",number_incircle);
