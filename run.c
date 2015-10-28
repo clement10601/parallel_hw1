@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <time.h>
 
 #define NUM_THREADS     8
 
 #define N 1000
 #define MEGEXTRA 1000000
+
+clock_t begin, end;
+double time_spent;
 
 long counter = 0;
 long number_incircle=0;
@@ -44,16 +48,16 @@ void *tosse(void *pitems)
     {
         counter++;
     }
-    printf("Job:#%d Done! Thread No.%ld!\n", counter,tid);
-    printf("distance_squared: %f\n",distance_squared);
+    //printf("Job:#%d Done! Thread No.%ld!\n", counter,tid);
+    //printf("distance_squared: %f\n",distance_squared);
     if(distance_squared<=1)
     {
-        printf("incircle!\n");
+        //printf("incircle!\n");
         number_incircle++;
     }
     else
     {
-        printf("not incircle!\n");
+        //printf("not incircle!\n");
     }
     pthread_mutex_unlock( &mutex1 );
     free(pi);
@@ -62,6 +66,7 @@ void *tosse(void *pitems)
 
 int main( int argc, char *argv[] )  
 {
+    begin = clock();
     int prgstat=0;
 	long tosses = 0;
     struct pitem pitem; 
@@ -94,7 +99,7 @@ int main( int argc, char *argv[] )
                 rc = pthread_create(&threads[t], NULL, tosse, ptr_pitem);
                 if (rc)
                 {
-                    printf("ERROR; return code from pthread_create() is %d\n", rc);
+                    //printf("ERROR; return code from pthread_create() is %d\n", rc);
                     exit(-1);
                 }
             }
@@ -108,16 +113,19 @@ int main( int argc, char *argv[] )
                 rc = pthread_join(threads[t], &status);
                 if (rc)
                 {
-                    printf("ERROR; return code from pthread_join() is %d\n", rc);
+                    //printf("ERROR; return code from pthread_join() is %d\n", rc);
                     exit(-1);
                 }
-                printf("Main: completed join with thread %ld having a status of %ld\n",t,(long)status);
+                //printf("Main: completed join with thread %ld having a status of %ld\n",t,(long)status);
             }
         }
         pi_estimate = 4*(((double)number_incircle)/((double)tosses));
-        printf("number of tosses: %u\n",tosses);
-        printf("number in circle: %u\n",number_incircle);
+        printf("Number of tosses: %u\n",tosses);
+        printf("Number in circle: %u\n",number_incircle);
         printf("Pi Estimate: %f\n",pi_estimate);
+        end = clock();
+        time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+        printf("Time Elapsed: %fs\n",time_spent);
         pthread_exit(NULL);
         prgstat=0;
    	}
