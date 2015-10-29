@@ -4,10 +4,6 @@
 #include <time.h>
 #include <sys/sysinfo.h>
 
-
-#define N 1000
-#define MEGEXTRA 1000000
-
 int NUM_THREADS =  4;
 
 clock_t begin, end;
@@ -21,6 +17,7 @@ struct pitem
 {
     long tosses;
     long thread;
+    long tosses_per_thread;
 };
 
 double randfrom(double min, double max) 
@@ -37,31 +34,28 @@ void *tosse(void *pitems)
     struct pitem *pi;
     long tid=0;
     long tosses=0;
+    long tosses_per_thread=0;
     double pi_estimate=0;
 
     pi=(struct pitem*)pitems;
     tid = pi->thread;
     tosses = pi->tosses;
-    x = randfrom(-1.0,1.0);
-    y = randfrom(-1.0,1.0);
-    distance_squared = x * x + y * y;
-    pthread_mutex_lock( &mutex1 );
-    if(counter<tosses)
+    tosses_per_thread = pi->tosses_per_thread;
+    while(tosses_per_thread>0)
     {
-        counter++;
+        x = randfrom(-1.0,1.0);
+        y = randfrom(-1.0,1.0);
+        distance_squared = x * x + y * y;
+        if(distance_squared<=1)
+        {
+            pthread_mutex_lock( &mutex1 );
+            number_incircle++;
+            pthread_mutex_unlock( &mutex1 ); 
+        }
+        tosses_per_thread--;
     }
     //printf("Job:#%d Done! Thread No.%ld!\n", counter,tid);
     //printf("distance_squared: %f\n",distance_squared);
-    if(distance_squared<=1)
-    {
-        //printf("incircle!\n");
-        number_incircle++;
-    }
-    else
-    {
-        //printf("not incircle!\n");
-    }
-    pthread_mutex_unlock( &mutex1 );
     free(pi);
     pthread_exit(NULL);
 }
@@ -86,30 +80,28 @@ int main( int argc, char *argv[] )
         tosses = strtol(argv[1],&e,0);
         pthread_t threads[NUM_THREADS];
         int l =NUM_THREADS;
+        long tosses_per_thread=0;
+        int exp = 0;
+        double x,y;
+        double distance_squared;
 
-        while(counter<tosses)
-        {
-            if(tosses-NUM_THREADS<0)
-            {
-                l=tosses;
-            }
+        tosses_per_thread = tosses/NUM_THREADS;
+        exp =tosses%NUM_THREADS;
+
             for(t=0; t<l; t++)
             {
                 ptr_pitem = (struct pitem *)malloc(sizeof(struct pitem));
                 pitem.thread = t;
                 ptr_pitem->thread = t;
                 ptr_pitem->tosses = tosses;
+                ptr_pitem->tosses_per_thread = tosses_per_thread;
+
                 rc = pthread_create(&threads[t], NULL, tosse, ptr_pitem);
                 if (rc)
                 {
                     //printf("ERROR; return code from pthread_create() is %d\n", rc);
                     exit(-1);
                 }
-            }
-            l = (tosses-counter)% NUM_THREADS;
-            if(l==0)
-            {
-                l=NUM_THREADS;
             }
             for(t=0; t<l; t++)
             {
@@ -121,7 +113,18 @@ int main( int argc, char *argv[] )
                 }
                 //printf("Main: completed join with thread %ld having a status of %ld\n",t,(long)status);
             }
+        while(exp>0)
+        {
+            x = randfrom(-1.0,1.0);
+            y = randfrom(-1.0,1.0);
+            distance_squared = x * x + y * y;
+            if(distance_squared<=1)
+            {
+                number_incircle++;
+            }
+            exp--;
         }
+                
         pi_estimate = 4*(((double)number_incircle)/((double)tosses));
         //printf("Number of tosses: %u\n",tosses);
         //printf("Number in circle: %u\n",number_incircle);
