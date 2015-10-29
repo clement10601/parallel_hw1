@@ -9,7 +9,6 @@ int NUM_THREADS =  4;
 clock_t begin, end;
 double time_spent;
 
-long counter = 0;
 long number_incircle=0;
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 
@@ -34,7 +33,7 @@ void *tosse(void *pitems)
     struct pitem *pi;
     long tid=0;
     long tosses=0;
-    long tosses_per_thread=0;
+    register long tosses_per_thread=0;
     double pi_estimate=0;
 
     pi=(struct pitem*)pitems;
@@ -63,13 +62,14 @@ void *tosse(void *pitems)
 int main( int argc, char *argv[] )  
 {
     begin = clock();
-    NUM_THREADS = get_nprocs();
+    //NUM_THREADS = get_nprocs();
+    NUM_THREADS = 48;
     int prgstat=0;
 	long tosses = 0;
     struct pitem pitem; 
     struct pitem* ptr_pitem;
     int rc = 0;
-    long t = 0;
+    register int t = 0;
     double pi_estimate=0;
 
     void *status;
